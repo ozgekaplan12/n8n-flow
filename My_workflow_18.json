@@ -1,0 +1,482 @@
+{
+  "name": "My workflow 18",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        120,
+        60
+      ],
+      "id": "d596f253-6875-4e68-bf12-fc024dcb08dc",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://overpass-api.de/api/interpreter",
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "text",
+        "body": "=[out:json][timeout:60];\n(\n  node[\"tourism\"=\"hotel\"](36.60,31.05,37.30,31.95);\n  way [\"tourism\"=\"hotel\"](36.60,31.05,37.30,31.95);\n  relation[\"tourism\"=\"hotel\"](36.60,31.05,37.30,31.95);\n);\nout center tags;\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        380,
+        60
+      ],
+      "id": "6f90ead2-5ee4-4a78-8784-817a8456f1bc",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "const elements = $json.elements || [];\n\nfunction normalize(str) {\n  return (str || '')\n    .toLowerCase()\n    .replace(/[\\s'\"”“’‘`´]+/g, '')\n    .trim();\n}\n\nconst seen = new Set();\n\nconst hotels = elements\n  .map(el => {\n    const t = el.tags || {};\n    const name = t.name?.trim();\n    if (!name) return null;\n\n    const rawPhone = t.phone || t['contact:phone'] || '';\n    const phone = rawPhone ? `'${rawPhone}'` : '';\n\n    const websiteRaw = t.website || t['contact:website'] || t.url || '';\n    const website = websiteRaw ? (websiteRaw.startsWith('http') ? websiteRaw : 'https://' + websiteRaw) : '';\n\n    const address = t['addr:full'] || `${t['addr:street'] || ''} ${t['addr:city'] || ''}`.trim();\n    const email = t.email || t['contact:email'] || '';\n\n\n    // 📌 Tekilleştirme anahtarı\n    const dedupeKey = rawPhone\n      ? rawPhone.replace(/\\D/g, '') // telefon varsa sadece rakamları al\n      : normalize(name) + normalize(address); // yoksa isim + adres\n\n    if (!dedupeKey || seen.has(dedupeKey)) return null;\n    seen.add(dedupeKey);\n\n    return {\n      name,\n      phone,\n      website,\n      address,\n      email\n};\n\n  })\n  .filter(item => item && (item.phone || item.website || item.address));\n\nreturn hotels;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        620,
+        60
+      ],
+      "id": "ec87c071-bc62-44c2-9312-52e7ad063333",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 2,
+      "position": [
+        840,
+        60
+      ],
+      "id": "6c8a7458-2f43-4f9b-a1c8-15c6abacc2cf",
+      "name": "Remove Duplicates"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1WvcE4hJxYYq9g9lcmRdoBijmugENtxJDsSTRlxiXWic",
+          "mode": "list",
+          "cachedResultName": "manavgat-otel",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1WvcE4hJxYYq9g9lcmRdoBijmugENtxJDsSTRlxiXWic/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sayfa1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1WvcE4hJxYYq9g9lcmRdoBijmugENtxJDsSTRlxiXWic/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "website",
+              "displayName": "website",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "address",
+              "displayName": "address",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "website ",
+              "displayName": "website ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        2360,
+        180
+      ],
+      "id": "ee4570dc-990f-4b05-b7ba-7eb2d98e4bec",
+      "name": "Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "gZWL8cwL82zqLCQd",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.website }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text",
+              "outputPropertyName": "body"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1180,
+        560
+      ],
+      "id": "1bdbbed8-400b-43dd-a378-fbdd19c7531b",
+      "name": "HTTP Request1",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const transformed = items.map(item => {\n  const html = item.json.body || item.json.data || item.json.html || '';\n\n  /* 1) E-posta yakala */\nconst emailRe = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}/g;\nconst emails = (html.match(emailRe) || []).filter(e => {\n  const lower = e.toLowerCase();\n  return !lower.endsWith('.svg') && !lower.endsWith('.png') && !lower.endsWith('.jpg') && !lower.includes('.webp');\n});\nconst uniques = [...new Set(emails)];\n\n\n  /* 2) Telefon yakala */\n  const phoneRe = /(\\+?90\\s?\\(?\\d{3}\\)?[\\s.-]?\\d{3}[\\s.-]?\\d{4})/g;\n  const phones  = html.match(phoneRe) || [];\n  let phone     = phones.length ? phones[0].trim() : (item.json.phone || '');\n\n  /* 2a) Google Sheets’te formül hatası olmaması için tek tırnak ekle */\n  if (phone && !phone.startsWith(\"'\")) phone = `'${phone}`;\n\n  /* 3) Otel adını al */\n  let title = '';\n  const t1 = html.match(/<title[^>]*>([\\s\\S]*?)<\\/title>/i);\n  if (t1) title = t1[1];\n  else {\n    const og = html.match(/<meta[^>]+property=[\"']og:(?:site_name|title)[\"'][^>]+content=[\"']([^\"']+)[\"']/i);\n    if (og) title = og[1];\n  }\n  title = title.replace(/\\|.*$/g, '').replace(/-.*$/g, '').trim();\n\n  /* 4) Slug üret */\n  const slug = title\n    .toLowerCase()\n    .normalize('NFD').replace(/[\\u0300-\\u036f]/g, '')\n    .replace(/\\b(hotel|otel|cave|suites?)\\b/g, '')\n    .replace(/[^a-z0-9]+/g, '')\n    .trim();\n\n  /* 5) Website */\n  const websiteRaw = item.json.website || item.json.urlToScrape || '';\n  const website = websiteRaw\n    ? (websiteRaw.startsWith('http') ? websiteRaw : 'https://' + websiteRaw)\n    : '';\n\n  /* 6) Çıktı */\n  return {\n    json: {\n      ...item.json,\n      email : uniques.join(', '),\n      phone,\n      website,\n      name_from_site : title || '',\n      slug,\n      has_email : uniques.length > 0\n    }\n  };\n});\n\n/* Sadece e-postası bulunanları gönder */\nreturn transformed.filter(i => i.json.has_email);\n\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1460,
+        560
+      ],
+      "id": "fc7f905f-8e2b-4954-86f3-fe769a203415",
+      "name": "Code2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "96ab8f01-800b-4b73-b4b0-5958549ae61a",
+              "name": "email",
+              "value": "={{ $json.email }}",
+              "type": "string"
+            },
+            {
+              "id": "8d4ee70f-d359-4e26-aace-1db5b04cd1d3",
+              "name": "name",
+              "value": "={{ $json.name_from_site }}",
+              "type": "string"
+            },
+            {
+              "id": "57c6c1f2-ee48-4bee-9d66-f7456d6191be",
+              "name": "phone",
+              "value": "={{ $json.phone }}",
+              "type": "string"
+            },
+            {
+              "id": "45b33d7b-3992-4480-a08e-19bc934b4720",
+              "name": "address",
+              "value": "={{ $json.address }}",
+              "type": "string"
+            },
+            {
+              "id": "2c73e28f-432c-4a60-a727-fd9a60925191",
+              "name": "website ",
+              "value": "={{ $json.website }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1660,
+        560
+      ],
+      "id": "7aa4ebbd-a391-4c17-b541-d600a4229ea8",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.filter(item => {\n  const url = (item.json.website || '').toLowerCase();\n  return (\n    url &&\n    url.startsWith('http') &&\n    !url.includes('powergaming') &&\n    !url.includes('casino') &&\n    !url.includes('slot') &&\n    !url.includes('judi') &&\n    !url.includes('terpopuler') &&\n    !url.includes('zelvehotel-restaurant')\n  );\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        560
+      ],
+      "id": "1f9d8634-bcd0-4b1f-89a0-fa7a597d684c",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "3d0ca07c-9617-41e5-8428-31de118f59b6",
+              "leftValue": "={{ $json.email }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "b3904633-7cfd-457f-8ba8-58b6308bf35a",
+              "leftValue": "={{ $json.website }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1060,
+        60
+      ],
+      "id": "06bbd75b-bbb6-43cb-8de0-574c83faa53f",
+      "name": "If"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1900,
+        180
+      ],
+      "id": "145d0831-b322-4caf-8145-d9989d3a0345",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "eb499a7e-17bc-453c-be08-a47286f726dd",
+              "operator": {
+                "type": "string",
+                "operation": "notRegex"
+              },
+              "leftValue": "={{ $json.extracted_email || $json.email || '' }}\n",
+              "rightValue": "=(google|gstatic|ggpht|schema\\.org|example\\.com|sentry\\.wixpress\\.com|sentry-next\\.wixpress\\.com|ingest\\.sentry\\.io|sentry\\.io|imli\\.com)"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "923a6a4d-0eb3-47f6-8344-5260b1d4a396",
+      "name": "Filter irrelevant URLs",
+      "type": "n8n-nodes-base.filter",
+      "position": [
+        2160,
+        180
+      ],
+      "typeVersion": 2.2
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Remove Duplicates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Duplicates": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Code2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code2": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Filter irrelevant URLs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter irrelevant URLs": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "5cc85f6c-ad65-481f-9a41-7015366aba1d",
+  "meta": {
+    "instanceId": "f559cca231b1b8e698f588c05cf105e55eca5f75164150e82f77ff8a68e88137"
+  },
+  "id": "ivufNgBinjUX43yu",
+  "tags": []
+}
